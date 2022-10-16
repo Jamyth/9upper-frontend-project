@@ -1,0 +1,26 @@
+#logger {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  max-height: 50px;
+  overflow-y: auto;
+
+  &::-webkit-scrollbar {
+    width: 0;
+  }
+
+  > div {
+    display: flex;
+    column-gap: 5px;
+    font-size: 14px;
+
+    > span {
+      color: #555;
+      min-width: 62px;
+    }
+
+    > div {
+      color: #666
+    }
+  }
+}
