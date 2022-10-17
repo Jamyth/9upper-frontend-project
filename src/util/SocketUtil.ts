@@ -3,6 +3,21 @@ import type {Socket} from "socket.io-client";
 
 let socket: Socket | null = null;
 
+interface Question {
+    id: number;
+    title: string;
+    type: string;
+    answer: string;
+    hints: string[];
+    difficulty: string
+}
+
+export enum Identity {
+    THINKER = 'THINKER',
+    REAL_UPPER = 'REAL_UPPER',
+    NINE_UPPER = 'NINE_UPPER',
+}
+
 function setup() {
     socket = io("localhost:3000");
     return socket;
@@ -19,6 +34,14 @@ function onConnect(fn: () => void) {
     return createSignal(socket => {
         socket.on('connect', () => {
             fn();
+        })
+    })
+}
+
+function serverLog(callback: (msg: string) => void) {
+    return createSignal(socket => {
+        socket.on('server-log', msg => {
+            callback(msg);
         })
     })
 }
@@ -71,8 +94,16 @@ function onGameStart(callback: () => void) {
     });
 }
 
+function onStartGameError(callback: (msg: string) => void) {
+    return createSignal(socket => {
+        socket.on('on-start-game-error', (msg) => {
+            callback(msg);
+        })
+    })
+}
+
 // Should listen after game start
-function onIdentityReceived(callback: (identity: any) => void) {
+function onIdentityReceived(callback: (identity: Identity) => void) {
     return createSignal((socket) => {
         socket.once("on-identity-received", (identity) => {
             callback(identity);
@@ -81,7 +112,7 @@ function onIdentityReceived(callback: (identity: any) => void) {
 }
 
 // Boardcast question to everyone
-function onQuestionReceived(callback: (question: any) => {}) {
+function onQuestionReceived(callback: (question: Question) => {}) {
     return createSignal((socket) => {
         socket.once("on-question-received", (question) => {
             callback(question);
@@ -117,12 +148,14 @@ function onGuessResponse(callback: (isCorrect: boolean) => void) {
 export const SocketUtil = Object.freeze({
     setup,
     onConnect,
+    serverLog,
     setNickname,
     onSetNicknameError,
     onMyNameSet,
     startGame,
     onPlayerNameSet,
     onGameStart,
+    onStartGameError,
     onIdentityReceived,
     onQuestionReceived,
     onReadQuestionTimeout,

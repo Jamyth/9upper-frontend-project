@@ -2,6 +2,7 @@ import {Module, register} from "react-shiba";
 import {Main} from "./Main";
 import {SocketUtil} from 'util/SocketUtil';
 import {DateUtil} from '@iamyth/util';
+import { Translator } from 'util/Translator';
 import type {State, Path, Tab} from "./type";
 
 const initialState: State = {
@@ -20,6 +21,9 @@ class ModuleMainModule extends Module<Path, State> {
         this.setState({socket});
         socket.on("connect", () => {
             this.pushLog('Socket 已連接');
+            SocketUtil.serverLog(msg => {
+                this.pushLog(msg);
+            })
             SocketUtil.onPlayerNameSet(({newPlayer, allPlayers}) => {
                 this.pushLog(`${newPlayer} 已加入`);
                 this.setState({players: allPlayers});
@@ -40,6 +44,12 @@ class ModuleMainModule extends Module<Path, State> {
             SocketUtil.onGameStart(() => {
                 this.pushLog("遊戲開始")
                 this.setState({isGameStarted: true});
+            });
+            SocketUtil.onStartGameError(errorMsg => {
+                this.pushLog(errorMsg);
+            })
+            SocketUtil.onIdentityReceived((identity) => {
+                this.pushLog(`您的身份是 ${Translator.identity(identity)} `);
             })
         })
     }
