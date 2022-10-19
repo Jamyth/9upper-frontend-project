@@ -1,4 +1,5 @@
-import type { Socket } from 'socket.io-client';
+import type {Socket} from 'socket.io-client';
+import type {Question, Identity} from 'util/SocketUtil';
 
 export type Path = never;
 
@@ -17,4 +18,7 @@ export interface State {
     logs: Log[];
     isHost: boolean;
     isGameStarted: boolean;
+    question: Question | null;
+    identity: Identity | null;
+    countdown: number | null;
 }

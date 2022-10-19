@@ -3,11 +3,11 @@ import type {Socket} from "socket.io-client";
 
 let socket: Socket | null = null;
 
-interface Question {
+export interface Question {
     id: number;
     title: string;
-    type: string;
-    answer: string;
+    type: string | null;
+    answer: string | null;
     hints: string[];
     difficulty: string
 }
@@ -111,8 +111,16 @@ function onIdentityReceived(callback: (identity: Identity) => void) {
     });
 }
 
+function onCountdownReceived(callback: (countdown: number | null) => void) {
+    return createSignal(socket => {
+        socket.on('on-countdown-received', (countdown) => {
+            callback(countdown);
+        })
+    })
+}
+
 // Boardcast question to everyone
-function onQuestionReceived(callback: (question: Question) => {}) {
+function onQuestionReceived(callback: (question: Question) => void) {
     return createSignal((socket) => {
         socket.once("on-question-received", (question) => {
             callback(question);
@@ -123,7 +131,7 @@ function onQuestionReceived(callback: (question: Question) => {}) {
 // Used to close answer
 function onReadQuestionTimeout(callback: () => void) {
     return createSignal((socket) => {
-        socket.once("on-read-question-timeout", () => {
+        socket.on("on-read-question-timeout", () => {
             callback();
         });
     });
@@ -157,6 +165,7 @@ export const SocketUtil = Object.freeze({
     onGameStart,
     onStartGameError,
     onIdentityReceived,
+    onCountdownReceived,
     onQuestionReceived,
     onReadQuestionTimeout,
     guessPlayer,

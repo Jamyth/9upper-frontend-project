@@ -1,8 +1,8 @@
 import {Module, register} from "react-shiba";
 import {Main} from "./Main";
-import {SocketUtil} from 'util/SocketUtil';
+import {Identity, Question, SocketUtil} from 'util/SocketUtil';
 import {DateUtil} from '@iamyth/util';
-import { Translator } from 'util/Translator';
+import {Translator} from 'util/Translator';
 import type {State, Path, Tab} from "./type";
 
 const initialState: State = {
@@ -12,7 +12,10 @@ const initialState: State = {
     tab: 'main-screen',
     logs: [],
     isHost: false,
-    isGameStarted: false
+    isGameStarted: false,
+    question: null,
+    identity: null,
+    countdown: null,
 };
 
 class ModuleMainModule extends Module<Path, State> {
@@ -38,7 +41,7 @@ class ModuleMainModule extends Module<Path, State> {
                 } else {
                     this.pushLog(`${hostName} 是房主`)
                 }
-                this.setState({ isHost });
+                this.setState({isHost});
                 this.changeTab('game');
             });
             SocketUtil.onGameStart(() => {
@@ -50,6 +53,17 @@ class ModuleMainModule extends Module<Path, State> {
             })
             SocketUtil.onIdentityReceived((identity) => {
                 this.pushLog(`您的身份是 ${Translator.identity(identity)} `);
+                this.setIdentity(identity);
+            });
+            SocketUtil.onCountdownReceived(countdown => {
+                if(countdown) {
+                    this.pushLog(`遊戲在 ${countdown} 內開始`);
+                }
+                this.setState({ countdown });
+            })
+            SocketUtil.onQuestionReceived(question => {
+                this.pushLog(JSON.stringify(question));
+                this.setQuestion(question);
             })
         })
     }
@@ -70,10 +84,22 @@ class ModuleMainModule extends Module<Path, State> {
     }
 
     startGame() {
-        if(!this.state.isHost) {
+        if (!this.state.isHost) {
             return;
         }
         SocketUtil.startGame();
+    }
+
+    setIdentity(identity: Identity) {
+        this.setState({ identity });
+    }
+
+    setQuestion(question: Question) {
+        this.setState({ question });
+    }
+
+    guess(playerName: string) {
+        SocketUtil.guessPlayer(playerName);
     }
 
     private pushLog(info: string) {
